@@ -18,8 +18,8 @@ pub fn run() {
     let mut gamma: u32 = 0;
     for f in balances {
         gamma <<= 1;
+        // NOTE: no spec for what to do if f == 0
         if f > 0 {
-            // no spec for what to do if f == 0
             gamma |= 1;
         }
     }
@@ -31,7 +31,6 @@ pub fn run() {
     let mut co2_set = oxygen_set.clone();
     filter_rating(&mut oxygen_set, true);
     filter_rating(&mut co2_set, false);
-
     let oxygen = u32::from_str_radix(oxygen_set[0], 2).unwrap();
     let co2 = u32::from_str_radix(co2_set[0], 2).unwrap();
 
