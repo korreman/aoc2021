@@ -16,10 +16,10 @@ pub fn run() {
 
     // Generate gamma, one bit at a time.
     let mut gamma: u32 = 0;
-    for f in balances {
+    for f in &balances {
         gamma <<= 1;
         // NOTE: no spec for what to do if f == 0
-        if f > 0 {
+        if *f > 0 {
             gamma |= 1;
         }
     }
