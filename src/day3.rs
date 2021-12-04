@@ -34,6 +34,7 @@ pub fn run() {
     let oxygen = u32::from_str_radix(oxygen_set[0], 2).unwrap();
     let co2 = u32::from_str_radix(co2_set[0], 2).unwrap();
 
+    // ----- Output -----
     println!(
         "Day 3 - Part 1: {} - Part 2: {}",
         epsilon * gamma,
