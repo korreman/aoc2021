@@ -25,7 +25,7 @@ pub fn run() {
     let result2 = find_loser(boards2, &draws);
 
     // ----- Output -----
-    println!("Day 3 - Part 1: {} - Part 2: {}", result1, result2);
+    println!("Day 4 - Part 1: {} - Part 2: {}", result1, result2);
 }
 
 #[derive(Clone, Debug)]
