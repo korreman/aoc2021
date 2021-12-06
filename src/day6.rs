@@ -18,10 +18,10 @@ pub fn run() {
     println!("Day 6 - Part 1: {} - Part 2: {}", result1, result2);
 }
 
-fn reproduce(fish: &[u32], days: u32) -> u128 {
-    let mut fish_counts: Vec<u128> = Vec::new();
+fn reproduce(fish: &[u32], days: u32) -> u64 {
+    let mut fish_counts: Vec<u64> = Vec::new();
     for i in 0..9 {
-        let amount = fish.iter().filter(|&&f| f == i).count() as u128;
+        let amount = fish.iter().filter(|&&f| f == i).count() as u64;
         fish_counts.push(amount);
     }
     for _ in 0..days {
