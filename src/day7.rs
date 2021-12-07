@@ -19,6 +19,7 @@ pub fn run(input: &str) -> (i32, i32) {
 fn part1(crabs: &mut [i32]) -> i32 {
     crabs.sort();
     // the best position is just the mean
+    // lucky that my data rounded to the right answer though
     let best_pos = crabs[crabs.len() / 2];
     let distance_sum: i32 = crabs.iter().map(|&x| (x - best_pos).abs()).sum();
     distance_sum
@@ -33,7 +34,7 @@ fn part2(crabs: &[i32]) -> i32 {
         let mut total_loss = 0;
         for &crab in crabs {
             let dist = (crab - p).abs();
-            total_loss += triangular(dist + 1);
+            total_loss += triangular(dist);
         }
 
         if total_loss < best_loss {
@@ -43,15 +44,11 @@ fn part2(crabs: &[i32]) -> i32 {
     }
     let distance_sum: i32 = crabs
         .iter()
-        .map(|&x| triangular((x - best_pos).abs() + 1))
+        .map(|&x| triangular((x - best_pos).abs()))
         .sum();
     distance_sum
 }
 
 fn triangular(n: i32) -> i32 {
-    if n > 0 {
-        n * (n - 1) / 2
-    } else {
-        0
-    }
+    n * (n + 1) / 2
 }
