@@ -1,6 +1,4 @@
-pub fn run() {
-    let input = std::fs::read_to_string("data/day5.txt").unwrap();
-
+pub fn run(input: &str) -> (u32, u32) {
     // ----- Parsing -----
     let mut lines1: Vec<Line> = input
         .split(&[' ', ',', '-', '>', '\n'][..])
@@ -21,7 +19,7 @@ pub fn run() {
     let result2 = draw_and_count(lines2);
 
     // ----- Output -----
-    println!("Day 5 - Part 1: {} - Part 2: {}", result1, result2);
+    (result1, result2)
 }
 
 #[derive(Debug, Clone)]

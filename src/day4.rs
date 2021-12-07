@@ -1,6 +1,4 @@
-pub fn run() {
-    let input = std::fs::read_to_string("data/day4.txt").unwrap();
-
+pub fn run(input: &str) -> (u32, u32) {
     // ----- Input parsing -----
     let (d, b) = input.split_once("\n\n").unwrap();
 
@@ -25,7 +23,7 @@ pub fn run() {
     let result2 = find_loser(boards2, &draws);
 
     // ----- Output -----
-    println!("Day 4 - Part 1: {} - Part 2: {}", result1, result2);
+    (result1, result2)
 }
 
 #[derive(Clone, Debug)]

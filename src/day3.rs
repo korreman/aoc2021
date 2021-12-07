@@ -1,6 +1,4 @@
-pub fn run() {
-    let input = std::fs::read_to_string("data/day3.txt").unwrap();
-
+pub fn run(input: &str) -> (u32, u32){
     // ----- Part 1 -----
     // Count the difference between the number of 0's and 1's in each bit.
     let mut balances: [i32; 12] = [0; 12];
@@ -35,11 +33,7 @@ pub fn run() {
     let co2 = u32::from_str_radix(co2_set[0], 2).unwrap();
 
     // ----- Output -----
-    println!(
-        "Day 3 - Part 1: {} - Part 2: {}",
-        epsilon * gamma,
-        oxygen * co2
-    )
+    (epsilon * gamma, oxygen * co2)
 }
 
 fn filter_rating(set: &mut Vec<&str>, parity: bool) {
