@@ -16,10 +16,11 @@ pub fn run(input: &str) -> (u32, u32) {
     let mut result1: u32 = 0;
 
     let mut low_points: Vec<(usize, usize)> = Vec::new();
-    for x in 0..height{
-        for y in 0..width{
+    for x in 0..height {
+        for y in 0..width {
             let h = grid[x][y];
             let a = grid.get(x + 1).and_then(|g| g.get(y)).unwrap_or(&10);
+            // what to do about underflow?
             let b = grid.get(x - 1).and_then(|g| g.get(y)).unwrap_or(&10);
             let c = grid.get(x).and_then(|g| g.get(y + 1)).unwrap_or(&10);
             let d = grid.get(x).and_then(|g| g.get(y - 1)).unwrap_or(&10);
@@ -47,13 +48,7 @@ pub fn run(input: &str) -> (u32, u32) {
                     .iter()
                     .filter_map(|p| *p)
                     {
-                        if grid
-                            .get(x2)
-                            .and_then(|g| g.get(y2))
-                            .copied()
-                            .unwrap_or(9)
-                            != 9
-                        {
+                        if grid.get(x2).and_then(|g| g.get(y2)).copied().unwrap_or(9) != 9 {
                             basin.insert((x2, y2));
                         }
                     }
