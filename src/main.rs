@@ -10,6 +10,7 @@ mod day9;
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 
 fn main() {
     run(day3::run, "data/day3.txt", "Day 3");
@@ -22,6 +23,7 @@ fn main() {
     run(day10::run, "data/day10.txt", "Day 10");
     run(day11::run, "data/day11.txt", "Day 11");
     run(day12::run, "data/day12.txt", "Day 12");
+    run(day13::run, "data/day13.txt", "Day 13");
 }
 
 fn run<R: std::fmt::Display, T: Fn(&str) -> (R, R)>(task: T, input_path: &str, name: &str) {
