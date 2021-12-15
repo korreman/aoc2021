@@ -1,4 +1,5 @@
-use std::collections::BTreeSet;
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 pub fn run(input: &str) -> (u64, u64) {
     let data = input
@@ -98,8 +99,10 @@ impl Grid<u8> {
                 let y = new_y % self.height;
                 new_data[new_x + new_y * new_width] = ((self.data[x + y * self.width] as usize
                     + new_x / self.width
-                    + new_y / self.height - 1)
-                    % 9 + 1) as u8;
+                    + new_y / self.height
+                    - 1)
+                    % 9
+                    + 1) as u8;
             }
         }
         Self {
@@ -110,18 +113,42 @@ impl Grid<u8> {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct Entry {
+    cost: usize,
+    pos: Pos,
+}
+
+impl Ord for Entry {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other
+            .cost
+            .cmp(&self.cost)
+            .then_with(|| self.pos.cmp(&other.pos))
+    }
+}
+
+impl PartialOrd for Entry {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 struct State {
-    costs: Grid<u32>,
-    queue: BTreeSet<(u32, Pos)>,
+    costs: Grid<usize>,
+    queue: BinaryHeap<Entry>,
 }
 
 impl State {
     fn new(width: usize, height: usize) -> Self {
-        let mut data = vec![u32::MAX; width * height];
+        let mut data = vec![usize::MAX; width * height];
         data[0] = 0;
 
-        let mut queue = BTreeSet::new();
-        queue.insert((0, Pos { x: 0, y: 0 }));
+        let mut queue = BinaryHeap::new();
+        queue.push(Entry {
+            pos: Pos { x: 0, y: 0 },
+            cost: 0,
+        });
 
         Self {
             costs: Grid {
@@ -133,39 +160,46 @@ impl State {
         }
     }
 
-    fn update(&mut self, p: Pos, value: u32) {
+    fn relax(&mut self, p: Pos, value: usize) {
         if let Some(cell) = self.costs.get_mut(p) {
             if value < *cell {
                 *cell = value;
-                self.queue.remove(&(*cell, p));
-                self.queue.insert((value, p));
+                self.queue.push(Entry {
+                    cost: value,
+                    pos: p,
+                });
             }
         }
     }
 
-    fn pop(&mut self) -> Option<(u32, Pos)> {
-        let min_entry = self.queue.iter().next()?.clone();
-        self.queue.remove(&min_entry);
-        Some(min_entry)
+    fn pop(&mut self) -> Option<Entry> {
+        let mut result = None;
+        while let Some(entry) = self.queue.pop() {
+            if entry.cost == *self.costs.get(entry.pos).unwrap() {
+                result = Some(entry);
+                break;
+            }
+        }
+        result
     }
 }
 
 fn task(map: &Grid<u8>) -> u64 {
     let mut state = State::new(map.width, map.height);
-    let mut result1 = 0;
-    while let Some((p_cost, p)) = state.pop() {
-        if p == (Pos {
-            x: map.width - 1,
-            y: map.height - 1,
-        }) {
-            result1 = p_cost as u64;
+    let mut result1 = u64::MAX;
+    while let Some(entry) = state.pop() {
+        if entry.pos
+            == (Pos {
+                x: map.width - 1,
+                y: map.height - 1,
+            })
+        {
+            result1 = entry.cost as u64;
             break;
         }
-        for q in map.neighbors(p) {
-            if let Some(q_cost) = map.get(q) {
-                //println!("Relaxing {:?} to {}", q, p_cost + *q_cost as u32);
-                state.update(q, p_cost + *q_cost as u32);
-            }
+        for q in map.neighbors(entry.pos) {
+            let q_cost = map.get(q).unwrap();
+            state.relax(q, entry.cost + *q_cost as usize);
         }
     }
     result1
