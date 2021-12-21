@@ -9,12 +9,12 @@ pub fn run(input: &str) -> (u64, u64) {
         .lines()
         .map(|line| {
             let (from, to) = line.split_once('-').unwrap();
-            let from_idx: u32 = names.get(from).map(|(idx, b)| *idx).unwrap_or_else(|| {
+            let from_idx: u32 = names.get(from).map(|(idx, _)| *idx).unwrap_or_else(|| {
                 let idx = names.len() as u32;
                 names.insert(from, (idx, from.chars().next().unwrap().is_uppercase()));
                 idx
             });
-            let to_idx: u32 = names.get(to).map(|(idx, b)| *idx).unwrap_or_else(|| {
+            let to_idx: u32 = names.get(to).map(|(idx, _)| *idx).unwrap_or_else(|| {
                 let idx = names.len() as u32;
                 names.insert(to, (idx, to.chars().next().unwrap().is_uppercase()));
                 idx

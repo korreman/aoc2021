@@ -28,7 +28,7 @@ pub fn run(input: &str) -> (u64, u64) {
     let height = coords.iter().map(|c| c.y).max().unwrap() + 1;
     let mut paper = Paper::new(width, height);
     for c in coords {
-        assert!(paper.mark(c));
+        paper.mark(c);
     }
 
     // Part 1
@@ -73,12 +73,9 @@ impl Paper {
         }
     }
 
-    fn mark(&mut self, p: Pos) -> bool {
+    fn mark(&mut self, p: Pos) {
         if p.x < self.width && p.y < self.height {
             self.data[p.x + p.y * self.original_width] = true;
-            true
-        } else {
-            false
         }
     }
 
@@ -97,10 +94,10 @@ impl Paper {
                 for x in new_width + 1..self.width {
                     for y in 0..self.height {
                         if self.get(Pos { x, y }) {
-                            assert!(self.mark(Pos {
+                            self.mark(Pos {
                                 x: 2 * new_width - x,
                                 y,
-                            }));
+                            });
                         }
                     }
                 }
@@ -110,10 +107,10 @@ impl Paper {
                 for x in 0..self.width {
                     for y in new_height + 1..self.height {
                         if self.get(Pos { x, y }) {
-                            assert!(self.mark(Pos {
+                            self.mark(Pos {
                                 x,
                                 y: 2 * new_height - y,
-                            }));
+                            });
                         }
                     }
                 }
@@ -137,11 +134,10 @@ impl Paper {
     fn print(&self) {
         for y in 0..self.height {
             for x in 0..self.width {
-                let symbol = if self.get(Pos {x, y}) {'█'} else {'░'};
+                let symbol = if self.get(Pos { x, y }) { "██" } else { "░░" };
                 print!("{}", symbol);
             }
             println!("");
         }
-        println!("");
     }
 }

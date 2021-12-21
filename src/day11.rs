@@ -12,10 +12,9 @@ pub fn run(input: &str) -> (u64, u64) {
         .collect();
 
     let mut result1 = 0;
-    let mut result2 = 0;
     let mut num_flashes: u64 = 0;
     let mut step = 0;
-    loop {
+    let result2 = loop {
         for i in 0..grid.len() {
             for j in 0..grid[0].len() {
                 grid[i][j].energy += 1;
@@ -73,14 +72,13 @@ pub fn run(input: &str) -> (u64, u64) {
         step += 1;
         let synced = grid.iter().flat_map(|row| row.iter()).all(|octo| octo.energy == 0);
         if synced {
-            result2 = step;
-            break;
+            break step;
         }
 
         if step == 100 {
             result1 = num_flashes;
         }
-    }
+    };
 
     (result1, result2)
 }
@@ -90,7 +88,7 @@ struct Octopus {
     has_flashed: bool,
 }
 
-fn print_grid(grid: &Vec<Vec<Octopus>>) {
+fn _print_grid(grid: &Vec<Vec<Octopus>>) {
     for row in grid {
         for o in row {
             print!("{}", o.energy);
