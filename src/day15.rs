@@ -1,9 +1,6 @@
 use std::collections::VecDeque;
-use std::time::Instant;
 
 pub fn run(input: &str) -> (u64, u64) {
-    let t1 = Instant::now();
-
     let data = input
         .chars()
         .filter(|&c| c != '\n')
@@ -19,14 +16,9 @@ pub fn run(input: &str) -> (u64, u64) {
         height,
     };
 
-    let t2 = Instant::now();
     let result1 = task(&map);
-    let t3 = Instant::now();
     let large_map = map.project(5);
-    let t4 = Instant::now();
     let result2 = task(&large_map);
-    let t5 = Instant::now();
-    println!("{:?},{:?},{:?},{:?}", t2 - t1, t3 - t2, t4 - t3, t5 - t4,);
     (result1, result2)
 }
 
