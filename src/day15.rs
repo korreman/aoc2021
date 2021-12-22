@@ -1,5 +1,4 @@
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
+use std::collections::VecDeque;
 
 pub fn run(input: &str) -> (u64, u64) {
     let data = input
@@ -23,7 +22,26 @@ pub fn run(input: &str) -> (u64, u64) {
     (result1, result2)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+fn task(map: &Grid<u8>) -> u64 {
+    let mut state = State::new(map.width, map.height);
+    loop {
+        let (cost, pos) = state.pop();
+        if pos
+            == (Pos {
+                x: map.width - 1,
+                y: map.height - 1,
+            })
+        {
+            break (cost as u64);
+        }
+        for q in map.neighbors(pos) {
+            let q_cost = map.get(q).unwrap();
+            state.relax(q, cost + *q_cost as usize);
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 struct Pos {
     x: usize,
     y: usize,
@@ -113,30 +131,9 @@ impl Grid<u8> {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
-struct Entry {
-    cost: usize,
-    pos: Pos,
-}
-
-impl Ord for Entry {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other
-            .cost
-            .cmp(&self.cost)
-            .then_with(|| self.pos.cmp(&other.pos))
-    }
-}
-
-impl PartialOrd for Entry {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 struct State {
     costs: Grid<usize>,
-    queue: BinaryHeap<Entry>,
+    queue: SlidingBucketQueue<Pos>,
 }
 
 impl State {
@@ -144,12 +141,8 @@ impl State {
         let mut data = vec![usize::MAX; width * height];
         data[0] = 0;
 
-        let mut queue = BinaryHeap::new();
-        queue.push(Entry {
-            pos: Pos { x: 0, y: 0 },
-            cost: 0,
-        });
-
+        let mut queue = SlidingBucketQueue::new(11);
+        queue.push(0, Pos { x: 0, y: 0 });
         Self {
             costs: Grid {
                 data,
@@ -164,43 +157,47 @@ impl State {
         if let Some(cell) = self.costs.get_mut(p) {
             if value < *cell {
                 *cell = value;
-                self.queue.push(Entry {
-                    cost: value,
-                    pos: p,
-                });
+                self.queue.push(value, p);
             }
         }
     }
 
-    fn pop(&mut self) -> Option<Entry> {
-        let mut result = None;
-        while let Some(entry) = self.queue.pop() {
-            if entry.cost == *self.costs.get(entry.pos).unwrap() {
-                result = Some(entry);
-                break;
+    fn pop(&mut self) -> (usize, Pos) {
+        loop {
+            let (cost, pos) = self.queue.pop();
+            if cost == *self.costs.get(pos).unwrap() {
+                break (cost, pos);
             }
         }
-        result
     }
 }
 
-fn task(map: &Grid<u8>) -> u64 {
-    let mut state = State::new(map.width, map.height);
-    let mut result1 = u64::MAX;
-    while let Some(entry) = state.pop() {
-        if entry.pos
-            == (Pos {
-                x: map.width - 1,
-                y: map.height - 1,
-            })
-        {
-            result1 = entry.cost as u64;
-            break;
-        }
-        for q in map.neighbors(entry.pos) {
-            let q_cost = map.get(q).unwrap();
-            state.relax(q, entry.cost + *q_cost as usize);
+struct SlidingBucketQueue<T> {
+    offset: usize,
+    queue: VecDeque<Vec<T>>,
+}
+
+impl<T: Clone> SlidingBucketQueue<T> {
+    fn new(range: usize) -> Self {
+        Self {
+            offset: 0,
+            queue: VecDeque::from(vec![Vec::new(); range]),
         }
     }
-    result1
+
+    fn push(&mut self, key: usize, value: T) {
+        self.queue[key - self.offset].push(value);
+    }
+
+    fn pop(&mut self) -> (usize, T) {
+        let value = loop {
+            if let Some(v) = self.queue[0].pop() {
+                break v;
+            } else {
+                self.offset += 1;
+                self.queue.rotate_left(1);
+            }
+        };
+        (self.offset, value)
+    }
 }
