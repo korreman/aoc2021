@@ -78,7 +78,7 @@ impl<T> Grid<T> {
 }
 
 impl<T: std::fmt::Display> Grid<T> {
-    fn print(&self) {
+    fn _print(&self) {
         for y in 0..self.height {
             for x in 0..self.width {
                 print!("{}", self.data[x + y * self.width]);
