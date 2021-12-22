@@ -1,6 +1,9 @@
 use std::collections::VecDeque;
+use std::time::Instant;
 
 pub fn run(input: &str) -> (u64, u64) {
+    let t1 = Instant::now();
+
     let data = input
         .chars()
         .filter(|&c| c != '\n')
@@ -16,9 +19,14 @@ pub fn run(input: &str) -> (u64, u64) {
         height,
     };
 
+    let t2 = Instant::now();
     let result1 = task(&map);
+    let t3 = Instant::now();
     let large_map = map.project(5);
+    let t4 = Instant::now();
     let result2 = task(&large_map);
+    let t5 = Instant::now();
+    println!("{:?},{:?},{:?},{:?}", t2 - t1, t3 - t2, t4 - t3, t5 - t4,);
     (result1, result2)
 }
 
@@ -35,8 +43,9 @@ fn task(map: &Grid<u8>) -> u64 {
             break (cost as u64);
         }
         for q in map.neighbors(pos) {
-            let q_cost = map.get(q).unwrap();
-            state.relax(q, cost + *q_cost as usize);
+            if let Some(q_cost) = map.get(q) {
+                state.relax(q, cost + *q_cost as usize);
+            }
         }
     }
 }
@@ -70,28 +79,13 @@ impl<T> Grid<T> {
         }
     }
 
-    fn neighbors(&self, p: Pos) -> Vec<Pos> {
-        let left = if p.x > 0 {
-            Some(Pos { x: p.x - 1, y: p.y })
-        } else {
-            None
-        };
-        let right = if p.x < self.width - 1 {
-            Some(Pos { x: p.x + 1, y: p.y })
-        } else {
-            None
-        };
-        let up = if p.y > 0 {
-            Some(Pos { x: p.x, y: p.y - 1 })
-        } else {
-            None
-        };
-        let down = if p.y < self.height - 1 {
-            Some(Pos { x: p.x, y: p.y + 1 })
-        } else {
-            None
-        };
-        [left, right, up, down].iter().filter_map(|&x| x).collect()
+    fn neighbors(&self, p: Pos) -> [Pos; 4] {
+        [
+            Pos { x: p.x - 1, y: p.y },
+            Pos { x: p.x + 1, y: p.y },
+            Pos { x: p.x, y: p.y - 1 },
+            Pos { x: p.x, y: p.y + 1 },
+        ]
     }
 }
 
