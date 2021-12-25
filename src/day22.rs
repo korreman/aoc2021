@@ -3,12 +3,20 @@ pub fn run(input: &str) -> (i64, i64) {
     // Seems like you could arrange cuboids into a tree structure.
     // Like a binary tree or an octuple tree.
 
+    // TODO:
+    // 1. Replace recursive ADT and recursion with array representation and loop+stack.
+    // 2. Attempt to simplify tree structure.
+    //    - Potentially possible to remove cuboid from leaves.
+    //      The main point of this would be to remove the need for additional bounds checks.
+    //    - Alternatively, use only cuboids?
+    //    - Point is, I think that a bunch of superfluous bounds checks are being performed.
+
     // Parse
     let actions: Vec<(Cuboid, bool)> = input
         .lines()
         .map(|line| {
             let value = line.starts_with("on");
-            let nums: Vec<i64> = line[3..]
+            let nums: Vec<i32> = line[3..]
                 .split(&['x', 'y', 'z', '=', '.', ',', ' '][..])
                 .filter(|&n| n != "")
                 .map(|n| n.parse().unwrap())
@@ -44,7 +52,7 @@ pub fn run(input: &str) -> (i64, i64) {
     }
     let result1 = tree1.count();
 
-    let mut cuboid2 = Cuboid {
+    let mut cuboid = Cuboid {
         x1: 0,
         x2: 0,
         y1: 0,
@@ -53,16 +61,16 @@ pub fn run(input: &str) -> (i64, i64) {
         z2: 0,
     };
     for (action, _) in &actions {
-        cuboid2.x1 = cuboid2.x1.min(action.x1);
-        cuboid2.x2 = cuboid2.x2.max(action.x2);
-        cuboid2.y1 = cuboid2.y1.min(action.y1);
-        cuboid2.y2 = cuboid2.y2.max(action.y2);
-        cuboid2.z1 = cuboid2.z1.min(action.z1);
-        cuboid2.z2 = cuboid2.z2.max(action.z2);
+        cuboid.x1 = cuboid.x1.min(action.x1);
+        cuboid.x2 = cuboid.x2.max(action.x2);
+        cuboid.y1 = cuboid.y1.min(action.y1);
+        cuboid.y2 = cuboid.y2.max(action.y2);
+        cuboid.z1 = cuboid.z1.min(action.z1);
+        cuboid.z2 = cuboid.z2.max(action.z2);
     }
 
     let mut tree2 = Tree::Leaf {
-        cuboid: cuboid2,
+        cuboid,
         state: false,
     };
 
@@ -76,20 +84,38 @@ pub fn run(input: &str) -> (i64, i64) {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Cuboid {
-    x1: i64,
-    x2: i64,
-    y1: i64,
-    y2: i64,
-    z1: i64,
-    z2: i64,
+    x1: i32,
+    x2: i32,
+    y1: i32,
+    y2: i32,
+    z1: i32,
+    z2: i32,}
+
+impl Cuboid {
+    fn get_cut(&self, other: Cuboid) -> Option<(Axis, i32)> {
+        if other.x1 > self.x1 && other.x1 < self.x2 {
+            Some((Axis::X, other.x1))
+        } else if other.x2 < self.x2 && other.x2 > self.x1 {
+            Some((Axis::X, other.x2))
+        } else if other.y1 > self.y1 && other.y1 < self.y2 {
+            Some((Axis::Y, other.y1))
+        } else if other.y2 < self.y2 && other.y2 > self.y1 {
+            Some((Axis::Y, other.y2))
+        } else if other.z1 > self.z1 && other.z1 < self.z2 {
+            Some((Axis::Z, other.z1))
+        } else if other.z2 < self.z2 && other.z2 > self.z1 {
+            Some((Axis::Z, other.z2))
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Debug)]
 enum Axis {
     X,
     Y,
-    Z,
-}
+    Z,}
 
 #[derive(Debug)]
 enum Tree {
@@ -98,11 +124,9 @@ enum Tree {
         cuboid: Cuboid,
         state: bool,
     },
-    // TODO: include spatial information in splitting node.
-    // The whole point is to have this information present at a higher level than the leaves.
     Split {
         axis: Axis,
-        plane: i64, // specifies the start of the second cuboid
+        plane: i32,
         a: Box<Tree>,
         b: Box<Tree>,
     },
@@ -127,66 +151,45 @@ impl Tree {
             Tree::Leaf {
                 cuboid: leaf,
                 state,
-            } if value != *state => {
-                let cut = if target.x1 > leaf.x1 && target.x1 < leaf.x2 {
-                    Some((Axis::X, target.x1))
-                } else if target.x2 < leaf.x2 && target.x2 > leaf.x1 {
-                    Some((Axis::X, target.x2))
-                } else if target.y1 > leaf.y1 && target.y1 < leaf.y2 {
-                    Some((Axis::Y, target.y1))
-                } else if target.y2 < leaf.y2 && target.y2 > leaf.y1 {
-                    Some((Axis::Y, target.y2))
-                } else if target.z1 > leaf.z1 && target.z1 < leaf.z2 {
-                    Some((Axis::Z, target.z1))
-                } else if target.z2 < leaf.z2 && target.z2 > leaf.z1 {
-                    Some((Axis::Z, target.z2))
-                } else {
-                    None
-                };
-                match cut {
-                    Some((axis, plane)) => {
-                        let (mut cuboid1, mut cuboid2) = (leaf.clone(), leaf.clone());
-                        match axis {
-                            Axis::X => {
-                                cuboid1.x2 = plane;
-                                cuboid2.x1 = plane;
-                            }
-                            Axis::Y => {
-                                cuboid1.y2 = plane;
-                                cuboid2.y1 = plane;
-                            }
-                            Axis::Z => {
-                                cuboid1.z2 = plane;
-                                cuboid2.z1 = plane;
-                            }
+            } if value != *state => match leaf.get_cut(target) {
+                Some((axis, plane)) => {
+                    let (mut cuboid_a, mut cuboid_b) = (leaf.clone(), leaf.clone());
+                    match axis {
+                        Axis::X => {
+                            cuboid_a.x2 = plane;
+                            cuboid_b.x1 = plane
                         }
-                        *self = Tree::Split {
-                            axis,
-                            plane,
-                            a: Box::new(Tree::Leaf {
-                                cuboid: cuboid1,
-                                state: *state,
-                            }),
-                            b: Box::new(Tree::Leaf {
-                                cuboid: cuboid2,
-                                state: *state,
-                            }),
-                        };
-                        self.set(target, value);
-                    }
-                    None => {
-                        if target.x1 <= leaf.x1
-                            && target.x2 >= leaf.x2
-                            && target.y1 <= leaf.y1
-                            && target.y2 >= leaf.y2
-                            && target.z1 <= leaf.z1
-                            && target.z2 >= leaf.z2
-                        {
-                            *state = value;
+                        Axis::Y => {
+                            cuboid_a.y2 = plane;
+                            cuboid_b.y1 = plane
+                        }
+                        Axis::Z => {
+                            cuboid_a.z2 = plane;
+                            cuboid_b.z1 = plane
                         }
                     }
-                }
-            }
+                    *self = Tree::Split {
+                        axis,
+                        plane,
+                        a: Box::new(Tree::Leaf {
+                            cuboid: cuboid_a,
+                            state: *state,
+                        }),                        b: Box::new(Tree::Leaf {
+                            cuboid: cuboid_b,
+                            state: *state,
+                        }),
+                    };
+                    self.set(target, value);
+                }                None => {
+                    if target.x1 <= leaf.x1
+                        && target.x2 >= leaf.x2
+                        && target.y1 <= leaf.y1
+                        && target.y2 >= leaf.y2
+                        && target.z1 <= leaf.z1
+                        && target.z2 >= leaf.z2
+                    {                        *state = value;
+                    }                }
+            },
             _ => {}
         }
     }
@@ -197,26 +200,12 @@ impl Tree {
                 cuboid,
                 state: true,
             } => {
-                let res =
-                    (cuboid.x2 - cuboid.x1) * (cuboid.y2 - cuboid.y1) * (cuboid.z2 - cuboid.z1);
-                res
+                (cuboid.x2 as i64 - cuboid.x1 as i64)
+                    * (cuboid.y2 as i64 - cuboid.y1 as i64)
+                    * (cuboid.z2 as i64 - cuboid.z1 as i64)
             }
             Tree::Split { a, b, .. } => a.count() + b.count(),
             _ => 0,
-        }
-    }
-
-    fn print(&self) {
-        match self {
-            Tree::Leaf {
-                cuboid,
-                state: true,
-            } => println!("{:?}", cuboid),
-            Tree::Split { a, b, .. } => {
-                a.print();
-                b.print()
-            }
-            _ => {}
         }
     }
 }
