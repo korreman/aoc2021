@@ -4,8 +4,8 @@ pub fn run(input: &str) -> (u32, u32) {
         .filter(|&c| c != '\n')
         .map(|c| match c {
             '.' => Cell::Free,
-            'v' => Cell::Downer,
-            '>' => Cell::Easter,
+            'v' => Cell::South,
+            '>' => Cell::East,
             _ => panic!("parse error: bad cell"),
         })
         .collect();
@@ -19,18 +19,18 @@ pub fn run(input: &str) -> (u32, u32) {
     };
 
     let mut steps: u32 = 1;
-    while grid.step() {
+    while !grid.step() {
         steps += 1;
     }
 
     (steps, 0)
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 enum Cell {
     Free,
-    Downer,
-    Easter,
+    South,
+    East,
 }
 
 #[derive(Clone)]
@@ -42,32 +42,29 @@ struct Grid {
 
 impl Grid {
     fn step(&mut self) -> bool {
-        let mut new_grid = self.data.clone();
-        let mut moved = false;
+        let mut grid1 = self.data.clone();
         for i in 0..self.data.len() {
-            if self.data[i] == Cell::Easter {
+            if self.data[i] == Cell::East {
                 let neighbor = (i + 1) % self.width + (i / self.width) * self.width;
                 if self.data[neighbor] == Cell::Free {
-                    new_grid[i] = Cell::Free;
-                    new_grid[neighbor] = Cell::Easter;
-                    moved = true;
+                    grid1[i] = Cell::Free;
+                    grid1[neighbor] = Cell::East;
                 }
             }
         }
-        self.data = new_grid;
-        let mut new_grid = self.data.clone();
-        for i in 0..self.data.len() {
-            if self.data[i] == Cell::Downer {
+        let mut grid2 = grid1.clone();
+        for i in 0..grid1.len() {
+            if grid1[i] == Cell::South {
                 let neighbor = (i + self.width) % (self.width * self.height);
-                if self.data[neighbor] == Cell::Free {
-                    new_grid[i] = Cell::Free;
-                    new_grid[neighbor] = Cell::Downer;
-                    moved = true;
+                if grid1[neighbor] == Cell::Free {
+                    grid2[i] = Cell::Free;
+                    grid2[neighbor] = Cell::South;
                 }
             }
         }
-        self.data = new_grid;
-        moved
+        let result = self.data == grid2;
+        self.data = grid2;
+        result
     }
 
     fn print(&self) {
@@ -75,8 +72,8 @@ impl Grid {
             for i in 0..self.width {
                 let c = match self.data[i + j * self.width] {
                     Cell::Free => '.',
-                    Cell::Downer => 'v',
-                    Cell::Easter => '>',
+                    Cell::South => 'v',
+                    Cell::East => '>',
                 };
                 print!("{}", c);
             }
