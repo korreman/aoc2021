@@ -89,7 +89,8 @@ struct Cuboid {
     y1: i32,
     y2: i32,
     z1: i32,
-    z2: i32,}
+    z2: i32,
+}
 
 impl Cuboid {
     fn get_cut(&self, other: Cuboid) -> Option<(Axis, i32)> {
@@ -115,7 +116,8 @@ impl Cuboid {
 enum Axis {
     X,
     Y,
-    Z,}
+    Z,
+}
 
 #[derive(Debug)]
 enum Tree {
@@ -174,21 +176,25 @@ impl Tree {
                         a: Box::new(Tree::Leaf {
                             cuboid: cuboid_a,
                             state: *state,
-                        }),                        b: Box::new(Tree::Leaf {
+                        }),
+                        b: Box::new(Tree::Leaf {
                             cuboid: cuboid_b,
                             state: *state,
                         }),
                     };
                     self.set(target, value);
-                }                None => {
+                }
+                None => {
                     if target.x1 <= leaf.x1
                         && target.x2 >= leaf.x2
                         && target.y1 <= leaf.y1
                         && target.y2 >= leaf.y2
                         && target.z1 <= leaf.z1
                         && target.z2 >= leaf.z2
-                    {                        *state = value;
-                    }                }
+                    {
+                        *state = value;
+                    }
+                }
             },
             _ => {}
         }
